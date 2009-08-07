@@ -1,3 +1,4 @@
+'''examples of the tubes microframework'''
 import tubes
 import intertubes
 
@@ -6,18 +7,22 @@ handler.register_static_path('/docs', 'docs/')
 
 @handler.get('^/ohhai/?$', produces=tubes.TEXT)
 def ohhai(request):
+    '''just say hi'''
     return 'OH HAI!'
 
 @handler.get('^/hello/(.*?)/?$', produces=tubes.TEXT)
 def hello(request, name):
+    '''say hi personally'''
     return 'OH HAI! ' + name
 
 @handler.get('^/add/(\\d+)/(\\d+)/?$', produces=tubes.TEXT)
 def add(request, first, second):
+    '''add two numbers'''
     return '= ' + str(int(first) + int(second))
 
 @handler.get('^/div/(\\d+)/(\\d+)/?$', produces=tubes.TEXT)
 def div(request, first, second):
+    '''divide two numbers, return error if the second is zero'''
     if int(second) == 0:
         return tubes.Response('second number can\'t be zero', 500)
 
@@ -25,10 +30,12 @@ def div(request, first, second):
 
 @handler.get('^/json/name/(.+?)/age/(\\d+)/nick/(.+?)/?$')
 def json(request, name, age, nick):
+    '''encode an object to json'''
     return {'name': name, 'age': age, 'nick': nick}
 
 @handler.get('^/fail/?$', produces=tubes.TEXT)
 def fail(request):
+    '''epic fail'''
     return tubes.Response('nothing to see here, please move along', 404)
 
 @handler.get('^/requests.js/?$', produces=tubes.JS)

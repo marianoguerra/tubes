@@ -83,7 +83,8 @@ class Handler(object):
                 if route.produces in self.marshallers:
                     result = self.marshallers[route.produces](result)
 
-                return Response(result, content_type=route.produces)(environ, start_response)
+                return Response(result, content_type=route.produces)(environ,
+                        start_response)
         return Response(status=404)(environ, start_response)
 
     def register_route(self, method, pattern, handler, accepts, produces):
@@ -116,7 +117,6 @@ class Handler(object):
             parts = re.split('(\(.*?\))', pattern)
             result = ['"']
             args = inspect.getargspec(route.handler).args[1:]
-            arg_index = 0
 
             for part in parts:
                 if part.startswith('('):

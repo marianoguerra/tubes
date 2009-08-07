@@ -1,3 +1,4 @@
+'''some utilities that can be used with tubes'''
 import inspect
 
 class STag(object):
@@ -59,11 +60,11 @@ TAGS = ('html', 'head', 'title', 'body', 'script', 'h1', 'h2', 'h3', 'h4',
 
 STAGS = ('meta', 'link', 'img', 'br', 'hr', 'base')
 
-for name in TAGS:
-    globals()[name] = create_tag(name)
+for tagname in TAGS:
+    globals()[tagname] = create_tag(tagname)
 
-for name in STAGS:
-    globals()[name] = create_tag(name, True)
+for tagname in STAGS:
+    globals()[tagname] = create_tag(tagname, True)
 
 def css(path):
     '''return a Tag object to link to a css stylesheet'''
@@ -82,7 +83,7 @@ def javascript(path=None, content=None):
 
 def generate_api_test(routes):
     '''generate the html to test the API'''
-    all = div(class_='wrapper')
+    wrapper = div(class_='wrapper')
     for method in routes:
         for route in routes[method]:
             name = route.handler.__name__
@@ -92,7 +93,7 @@ def generate_api_test(routes):
             tbl = table(class_='api-form', id=name)
             output = div(class_='output', id=output_id,
                     onclick="$(this).html('');")
-            all.add(div(h2(name), tbl, output, class_='api'))
+            wrapper.add(div(h2(name), tbl, output, class_='api'))
 
             for arg in inspect.getargspec(route.handler).args[1:]:
                 argname = name + '-' + arg
@@ -104,9 +105,10 @@ def generate_api_test(routes):
 
             ids = ', '.join("'%s'" % (arg, ) for arg in args)
             tbl.add(tr(td(), td(button('send',
-                onclick='sendForm(\'' + name + '\', [' + ids + '], \'' + output_id + '\')'))))
+                onclick='sendForm(\'' + name + '\', [' + ids + '], \'' + \
+                        output_id + '\')'))))
 
-    return str(all)
+    return str(wrapper)
 
 def generate_html_example(routes,
     jquery_path='http://code.jquery.com/jquery-latest.pack.js',
