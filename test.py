@@ -1,9 +1,11 @@
 '''examples of the tubes microframework'''
+import json
 import tubes
 import intertubes
 
 handler = tubes.Handler()
 handler.register_static_path('/docs', 'docs/')
+handler.register_static_path('/files', 'files/')
 
 @handler.get('^/ohhai/?$', produces=tubes.TEXT)
 def ohhai(request):
@@ -29,7 +31,7 @@ def div(request, first, second):
     return '= ' + str(float(first) / float(second))
 
 @handler.get('^/json/name/(.+?)/age/(\\d+)/nick/(.+?)/?$')
-def json(request, name, age, nick):
+def json_(request, name, age, nick):
     '''encode an object to json'''
     return {'name': name, 'age': age, 'nick': nick}
 
@@ -48,7 +50,15 @@ def test(request):
     '''return a dummy html to play with the API'''
     return TEST_PAGE
 
+@handler.post('^/add/?$', produces=tubes.JSON, has_payload=True)
+def add_post(request):
+    '''return the sum of two values but using post and payload'''
+    body = request.stream.read()
+    data = json.loads(body)
+    return '= ' + str(data['first'] + data['second'])
+
 REQUESTS = handler.to_javascript()
-TEST_PAGE = intertubes.generate_html_example(handler.routes)
+TEST_PAGE = intertubes.generate_html_example(handler.routes,
+        ('/files/json2.js',))
 
 tubes.run(handler, use_reloader=True, use_debugger=True)

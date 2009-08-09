@@ -103,6 +103,12 @@ def generate_api_test(routes):
                     td(input(type='text', id=argname, class_='value'),
                         class_='right')))
 
+            if route.has_payload:
+                tbl.add(tr(
+                    td("payload (eval)", class_='left'),
+                    td(input(type='text', id=name + '--payload', class_='value'),
+                        class_='right')))
+
             ids = ', '.join("'%s'" % (arg, ) for arg in args)
             tbl.add(tr(td(), td(button('send',
                 onclick='sendForm(\'' + name + '\', [' + ids + '], \'' + \
@@ -110,18 +116,22 @@ def generate_api_test(routes):
 
     return str(wrapper)
 
-def generate_html_example(routes,
-    jquery_path='http://code.jquery.com/jquery-latest.pack.js',
+def generate_html_example(routes, js_paths=None,
+    jquery_path='/files/jquery-1.3.2.js',
     requests_path='requests.js', namespace='requests'):
     '''return a html file that will make use of the
     API defined on routes
     '''
-    return str(html(
-        head(title('API test'), inline_css(EXAMPLE_CSS),
-            javascript(path=jquery_path),
-            javascript(path=requests_path),
-            javascript(content=EXAMPLE_JS % (namespace, ))),
-        body(h1('API test'), generate_api_test(routes))))
+    head_tag = head(title('API test'), inline_css(EXAMPLE_CSS),
+        javascript(path=jquery_path),
+        javascript(path=requests_path),
+        javascript(content=EXAMPLE_JS % (namespace, )))
+
+    if js_paths is not None:
+        for js_path in js_paths:
+            head_tag.add(javascript(path=js_path))
+
+    return str(html(head_tag, body(h1('API test'), generate_api_test(routes))))
 
 EXAMPLE_CSS = """
 html, body, span, div, h1, h2, h3, h4, h5, h6, table, td, tr{
@@ -173,10 +183,18 @@ EXAMPLE_JS = """
 var reqs = %s;
 
 function sendForm(name, ids, outputId) {
-    var values = [], func = reqs[name];
+    var values = [], payload, func = reqs[name];
 
     for(id in ids) {
         values.push($('#' + name + ' #' + ids[id]).val());
+    }
+
+    payload = $('#' + name + '--payload').val();
+
+    if(typeof(payload) !== 'undefined') {
+        payload = '"' + payload.replace(/"/g, '\\\\"') + '"';
+        console.log(payload);
+        values.push(eval(payload));
     }
 
     values.push(function(response) {onSuccess(outputId, response);});
@@ -186,7 +204,13 @@ function sendForm(name, ids, outputId) {
 }
 
 function onSuccess(outputId, response) {
-    $('#' + outputId).html(response);
+    if(typeof(response) === 'string') {
+        $('#' + outputId).html(response);
+    }
+    else {
+        $('#' + outputId).html(JSON.stringify(response));
+    }
+
     console.log(response);
 }
 

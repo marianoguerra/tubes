@@ -24,12 +24,12 @@ JQUERY_TYPES[XML] = 'xml'
 class Route(object):
     '''a class that represents a registered route'''
     def __init__(self, pattern, handler, accepts=None, produces='text/plain',
-            has_content=False):
+            has_payload=False):
         '''pattern -- the regex that when matches calls handler
         handler -- the method to call when pattern matches
         accepts -- the content type that is accepted
         produces -- the content type that handler produces
-        has_content -- if the request contains information on the body
+        has_payload -- if the request contains information on the body
         '''
 
         self.pattern = pattern
@@ -38,15 +38,16 @@ class Route(object):
         self.handler = handler
         self.accepts = accepts
         self.produces = produces
-        self.has_content = has_content
+        self.has_payload = has_payload
 
 def generate_route_decorator(method):
     '''return a decorator that will add Route objects to method'''
-    def decorator(self, pattern, accepts=None, produces=JSON):
+    def decorator(self, pattern, accepts=None, produces=JSON, has_payload=False):
         '''the decorator to register a new Route'''
         def wrapper(func):
             '''the decorator itself'''
-            self.register_route(method, pattern, func, accepts, produces)
+            self.register_route(method, pattern, func, accepts, produces,
+                    has_payload)
             return func
         return wrapper
     return decorator
@@ -87,12 +88,14 @@ class Handler(object):
                         start_response)
         return Response(status=404)(environ, start_response)
 
-    def register_route(self, method, pattern, handler, accepts, produces):
+    def register_route(self, method, pattern, handler, accepts, produces,
+            has_payload):
         '''register a new route on the routes class variable'''
         if method not in self.routes:
             self.routes[method] = []
 
-        self.routes[method].append(Route(pattern, handler, accepts, produces))
+        self.routes[method].append(Route(pattern, handler, accepts, produces,
+            has_payload))
 
     def register_marshaller(self, mimetype, func):
         '''register a method to transform an input to an output accourding
@@ -129,7 +132,7 @@ class Handler(object):
             code  = "    var url = %s;\n" % (''.join(result), )
             code += "    $.ajax({'contentType': '%s',\n" % (route.produces, )
 
-            if route.has_content:
+            if route.has_payload:
                 if route.accepts == JSON:
                     code += "        'data': JSON.stringify(data),\n"
                 else:
@@ -151,6 +154,10 @@ class Handler(object):
         for method, routes in self.routes.iteritems():
             for route in routes:
                 args = inspect.getargspec(route.handler).args[1:]
+
+                if route.has_payload:
+                    args += ['data']
+
                 args += ['onSuccess', 'onError']
 
                 code += '// handle %s on %s\n' % (method, route.pattern)
