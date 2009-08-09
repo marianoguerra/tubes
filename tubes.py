@@ -106,68 +106,6 @@ class Handler(object):
         '''register a path that will be served as static content'''
         self.static_paths[match_path] = os.path.join(*dest_path)
 
-    def to_javascript(self, namespace='requests'):
-        '''return javascript code to interact with this handler'''
-        def get_rest_call(method, route):
-            '''return a string representing a asynchornous REST call'''
-            pattern = route.pattern
-            if pattern.startswith('^'):
-                pattern = pattern[1:]
-
-            if pattern.endswith('?'):
-                pattern = pattern[:-1]
-
-            parts = re.split('(\(.*?\))', pattern)
-            result = ['"']
-            args = inspect.getargspec(route.handler).args[1:]
-
-            for part in parts:
-                if part.startswith('('):
-                    result.append('" + ' + args.pop(0) + ' + "')
-                else:
-                    result.append(part.replace('^', '').replace('$',
-                        '').replace('?', ''))
-
-            result.append('"')
-            code  = "    var url = %s;\n" % (''.join(result), )
-            code += "    $.ajax({'contentType': '%s',\n" % (route.produces, )
-
-            if route.has_payload:
-                if route.accepts == JSON:
-                    code += "        'data': JSON.stringify(data),\n"
-                else:
-                    code += "        'data': data,\n"
-
-            code += "        'dataType': '%s',\n" % \
-                    (JQUERY_TYPES.get(route.produces, 'text'),)
-            code += "        'error': onError,\n"
-            code += "        'success': onSuccess,\n"
-            code += "        'type': '%s',\n" % (method, )
-            code += "        'url': url});\n"
-
-            return code
-
-        code  = 'var %s = {};\n\n' % (namespace,)
-        code += '%s.cb = function(response) {console.log(response);};\n\n' % \
-                (namespace, )
-
-        for method, routes in self.routes.iteritems():
-            for route in routes:
-                args = inspect.getargspec(route.handler).args[1:]
-
-                if route.has_payload:
-                    args += ['data']
-
-                args += ['onSuccess', 'onError']
-
-                code += '// handle %s on %s\n' % (method, route.pattern)
-                code += '%s.%s = function(%s) {\n%s};\n\n' % (namespace,
-                        route.handler.__name__,
-                        ', '.join(args),
-                        get_rest_call(method, route))
-
-        return code
-
     # http://tools.ietf.org/html/rfc2616#page-51
     get = generate_route_decorator('GET')
     post = generate_route_decorator('POST')

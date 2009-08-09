@@ -1,5 +1,8 @@
 '''some utilities that can be used with tubes'''
+import re
 import inspect
+
+import tubes
 
 class STag(object):
     '''an object that represents a [x]html tag that closes on definition'''
@@ -81,6 +84,55 @@ def javascript(path=None, content=None):
     else:
         return script(content, type="text/javascript")
 
+def generate_model(classes, namespace='model', initialize_namespace=True):
+    code = ''
+
+    if initialize_namespace:
+        code += 'var %s = {}\n\n' % (namespace, )
+
+    for class_ in classes:
+        code += class_constructor(class_)
+
+    return code
+
+def class_constructor(class_, namespace='model'):
+    '''return the constructor of a class in js'''
+    args = inspect.getargspec(class_.__init__)
+    def_offset = len(args.defaults)
+    common = args.args[1: -def_offset]
+    defaults = args.args[-def_offset:]
+    first = True
+
+    code = '%s.%s = function (%s) {\n    return {' % (namespace,
+            class_.__name__, ', '.join(args.args[1:]))
+
+    for arg in common:
+        if first:
+            first = False
+        else:
+            code += '        '
+
+        code += '"%s": %s,\n' % (arg, arg)
+
+    for arg, value in zip(defaults, args.defaults):
+        if value is None:
+            rep = 'null'
+        else:
+            rep = repr(value)
+
+        if first:
+            first = False
+        else:
+            code += '        '
+
+
+        code += '"%s": %s || %s,\n' % (arg, arg, rep)
+
+    code = code[:-2]
+
+    code += '};\n};\n\n'
+    return code
+
 def generate_api_test(routes):
     '''generate the html to test the API'''
     wrapper = div(class_='wrapper')
@@ -116,12 +168,13 @@ def generate_api_test(routes):
 
     return str(wrapper)
 
-def generate_html_example(routes, js_paths=None,
+def generate_html_example(handler, js_paths=None,
     jquery_path='/files/jquery-1.3.2.js',
     requests_path='requests.js', namespace='requests'):
     '''return a html file that will make use of the
     API defined on routes
     '''
+    routes = handler.routes
     head_tag = head(title('API test'), inline_css(EXAMPLE_CSS),
         javascript(path=jquery_path),
         javascript(path=requests_path),
@@ -132,6 +185,68 @@ def generate_html_example(routes, js_paths=None,
             head_tag.add(javascript(path=js_path))
 
     return str(html(head_tag, body(h1('API test'), generate_api_test(routes))))
+
+def generate_requests(handler, namespace='requests'):
+    '''return javascript code to interact with this handler'''
+    def get_rest_call(method, route):
+        '''return a string representing a asynchornous REST call'''
+        pattern = route.pattern
+        if pattern.startswith('^'):
+            pattern = pattern[1:]
+
+        if pattern.endswith('?'):
+            pattern = pattern[:-1]
+
+        parts = re.split('(\(.*?\))', pattern)
+        result = ['"']
+        args = inspect.getargspec(route.handler).args[1:]
+
+        for part in parts:
+            if part.startswith('('):
+                result.append('" + ' + args.pop(0) + ' + "')
+            else:
+                result.append(part.replace('^', '').replace('$',
+                    '').replace('?', ''))
+
+        result.append('"')
+        code  = "    var url = %s;\n" % (''.join(result), )
+        code += "    $.ajax({'contentType': '%s',\n" % (route.produces, )
+
+        if route.has_payload:
+            if route.accepts == tubes.JSON:
+                code += "        'data': JSON.stringify(data),\n"
+            else:
+                code += "        'data': data,\n"
+
+        code += "        'dataType': '%s',\n" % \
+                (tubes.JQUERY_TYPES.get(route.produces, 'text'),)
+        code += "        'error': onError,\n"
+        code += "        'success': onSuccess,\n"
+        code += "        'type': '%s',\n" % (method, )
+        code += "        'url': url});\n"
+
+        return code
+
+    code  = 'var %s = {};\n\n' % (namespace,)
+    code += '%s.cb = function(response) {console.log(response);};\n\n' % \
+            (namespace, )
+
+    for method, routes in handler.routes.iteritems():
+        for route in routes:
+            args = inspect.getargspec(route.handler).args[1:]
+
+            if route.has_payload:
+                args += ['data']
+
+            args += ['onSuccess', 'onError']
+
+            code += '// handle %s on %s\n' % (method, route.pattern)
+            code += '%s.%s = function(%s) {\n%s};\n\n' % (namespace,
+                    route.handler.__name__,
+                    ', '.join(args),
+                    get_rest_call(method, route))
+
+    return code
 
 EXAMPLE_CSS = """
 html, body, span, div, h1, h2, h3, h4, h5, h6, table, td, tr{
@@ -183,7 +298,7 @@ EXAMPLE_JS = """
 var reqs = %s;
 
 function sendForm(name, ids, outputId) {
-    var values = [], payload, func = reqs[name];
+    var values = [], payload, value, func = reqs[name];
 
     for(id in ids) {
         values.push($('#' + name + ' #' + ids[id]).val());
@@ -192,9 +307,8 @@ function sendForm(name, ids, outputId) {
     payload = $('#' + name + '--payload').val();
 
     if(typeof(payload) !== 'undefined') {
-        payload = '"' + payload.replace(/"/g, '\\\\"') + '"';
-        console.log(payload);
-        values.push(eval(payload));
+        value = eval(payload);
+        values.push(value);
     }
 
     values.push(function(response) {onSuccess(outputId, response);});
