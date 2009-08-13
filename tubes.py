@@ -2,7 +2,6 @@
 import os
 import re
 import json
-import inspect
 from werkzeug import Request
 from werkzeug import Response
 import werkzeug
@@ -54,12 +53,14 @@ def generate_route_decorator(method):
 
 class Handler(object):
     '''handler for requests'''
+    __name__ = 'tubes'
+
     def __init__(self):
         self.routes = {}
         self.marshallers = {JSON: json.dumps, TEXT: str}
         self.static_paths = {}
 
-    def handle(self, environ, start_response):
+    def __call__(self, environ, start_response):
         '''try to match the request with the registered routes'''
         path = environ.get('PATH_INFO', '')
         command = environ.get('REQUEST_METHOD', None)
@@ -121,7 +122,16 @@ def run(handler, host='0.0.0.0', port=8000, use_reloader=False,
         reloader_interval=1, threaded=False, processes=1, request_handler=None,
         passthrough_errors=False):
     '''create a server instance and run it'''
-    werkzeug.run_simple(host, port, handler.handle, use_reloader, use_debugger,
+    werkzeug.run_simple(host, port, handler, use_reloader, use_debugger,
             use_evalex, extra_files, reloader_interval, threaded, processes,
             request_handler, handler.static_paths, passthrough_errors)
+
+def run_gae(handler):
+    '''run the application on google app engine'''
+    if handler.static_paths:
+        from werkzeug.utils import SharedDataMiddleware
+        handler = SharedDataMiddleware(handler, handler.static_paths)
+
+    from google.appengine.ext.webapp.util import run_wsgi_app
+    run_wsgi_app(handler)
 
