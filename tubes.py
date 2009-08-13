@@ -67,7 +67,11 @@ class Handler(object):
         request = Request(environ)
 
         for route in self.routes.get(command, ()):
-            # TODO: handle accepts
+            accepts = request.accept_mimetypes.values()
+            if route.accepts and request.accept_mimetypes and \
+                    route.accepts not in accepts and  '*/*' not in accepts:
+                continue
+
             match = route.regex.match(path)
 
             if match is not None:
