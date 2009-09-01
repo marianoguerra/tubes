@@ -13,6 +13,7 @@ TEXT = 'text/plain'
 HTML = 'text/html'
 XML = 'text/xml'
 JS = 'application/javascript'
+ATOM = 'application/atom+xml'
 
 JQUERY_TYPES = {}
 JQUERY_TYPES[JSON] = 'json'
@@ -76,12 +77,17 @@ class Handler(object):
 
             if match is not None:
                 if route.group_count == 0:
-                    result = route.handler(request)
+                    args = []
                 elif route.group_count == 1:
-                    result = route.handler(request, match.group(1))
+                    args = [match.group(1)]
                 else:
-                    result = route.handler(request,
-                        *match.group(*range(1, route.group_count + 1)))
+                    args = match.group(*range(1, route.group_count + 1))
+
+                if route.accepts == JSON:
+                    # add the body of the request as first parameter
+                    args.insert(0, json.loads(request.stream.read()))
+
+                result = route.handler(request, *args)
 
                 if isinstance(result, Response):
                     return result(environ, start_response)
