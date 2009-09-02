@@ -212,11 +212,10 @@ def generate_requests(handler, namespace='requests'):
         code  = "    var url = %s;\n" % (''.join(result), )
         code += "    $.ajax({'contentType': '%s',\n" % (route.produces, )
 
-        if route.has_payload:
-            if route.accepts == tubes.JSON:
-                code += "        'data': JSON.stringify(data),\n"
-            else:
-                code += "        'data': data,\n"
+        if route.accepts == tubes.JSON:
+            code += "        'data': JSON.stringify(data),\n"
+        else:
+            code += "        'data': data,\n"
 
         code += "        'dataType': '%s',\n" % \
                 (tubes.JQUERY_TYPES.get(route.produces, 'text'),)
