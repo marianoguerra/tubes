@@ -1,0 +1,30 @@
+<html>
+ <head>
+  <title>ihasfriendz</title>
+  <link rel="stylesheet" href="/files/style.css" type="text/css">
+  <script type="text/javascript" src="/model.js"></script>
+  <script type="text/javascript" src="/requests.js"></script>
+  <script type="text/javascript" src="/files/ui.js"></script>
+  <script type="text/javascript" src="/files/html.js"></script>
+  <script type="text/javascript" src="/files/json.js"></script>
+  <script type="text/javascript" src="/files/jquery-1.3.2.js"></script>
+ </head>
+ <body>
+  <div id="error" onclick="$(this).hide().html('');"></div>
+  <div id="submit">
+   <div class="row">
+    <label for="user">user</label> <input type="text" name="user" id="user"/>
+   </div>
+   <div class="row">
+    <label for="title">title</label> <input type="text" name="title" id="title"/>
+   </div>
+    <textarea name="message" id="message"></textarea>
+    <button id="send" onclick="ui.onSendClick();">send</button>
+  </div>
+
+  <div id="timeline">
+
+  </div>
+ </body>
+</html>
+
