@@ -35,6 +35,8 @@ ui.onSendClick = function () {
 
 ui.onSendOK = function (notice) {
     ui.addNotice(notice);
+    $('#title').val('');
+    $('#message').val('');
 };
 
 ui.onSendError = function (response) {
