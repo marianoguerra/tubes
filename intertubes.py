@@ -232,18 +232,22 @@ def generate_requests(handler, namespace='requests'):
 
     for method, routes in handler.routes.iteritems():
         for route in routes:
-            args = inspect.getargspec(route.handler).args[1:]
+            start_arg = 1
 
-            if route.has_payload:
+            if route.accepts == tubes.JSON:
+                start_arg = 2
+
+            args = inspect.getargspec(route.handler).args[start_arg:]
+
+            if route.has_payload or route.accepts == tubes.JSON:
                 args += ['data']
 
             args += ['onSuccess', 'onError']
+            method_name = tubes.underscores_to_camelcase(route.handler.__name__)
 
             code += '// handle %s on %s\n' % (method, route.pattern)
             code += '%s.%s = function(%s) {\n%s};\n\n' % (namespace,
-                    route.handler.__name__,
-                    ', '.join(args),
-                    get_rest_call(method, route))
+                    method_name, ', '.join(args), get_rest_call(method, route))
 
     return code
 

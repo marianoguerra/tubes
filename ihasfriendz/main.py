@@ -1,15 +1,20 @@
+import os
+import sys
 import time
 import json
 import uuid
+import Queue
+from xml.etree import ElementTree
+
+sys.path.append(os.path.abspath('..'))
+
 import tubes
 import intertubes
 import intertubes as h
-import Queue
-
-from xml.etree import ElementTree
 
 import pubsubhubbub_publish as pshb
 from feedformatter import Feed
+
 
 PORT = 8081
 DOMAIN = 'http://localhost:' + str(PORT) + '/'
@@ -23,10 +28,12 @@ user_notices = {}
 stream = []
 new_notices = Queue.Queue()
 
+@tubes.JsonClass()
 class User(object):
     """a class that represents an user"""
 
-    def __init__(self, user, mail, firstname=None, lastname=None, website=None):
+    def __init__(self, user=None, mail=None, firstname=None,
+            lastname=None, website=None):
         """constructor"""
         self.user = user
         self.mail = mail
@@ -34,28 +41,12 @@ class User(object):
         self.lastname = lastname
         self.website = website
 
-    @classmethod
-    def from_json(cls, jsonuser):
-        """return an User object from a json object that contains the same
-        fields
-        """
-        user = jsonuser['user']
-        mail = jsonuser['mail']
-        firstname = jsonuser.get('firstname', None)
-        lastname = jsonuser.get('lastname', None)
-        website = jsonuser.get('website', None)
-
-        return cls(user, mail, firstname, lastname, website)
-
-    def to_json(self):
-        """return a dict representation of the user
-        """
-        return vars(self)
-
+@tubes.JsonClass()
 class Notice(object):
     """a class that represents a notice"""
 
-    def __init__(self, uid, title, body, author, destination=None, creation=None):
+    def __init__(self, uid=None, title=None, body=None, author=None,
+            destination=None, creation=None):
         """constructor, author and destination are User objects
         """
         self.uid = uid
@@ -67,25 +58,6 @@ class Notice(object):
         self.creation = creation
         if self.creation is None:
             self.creation = time.time()
-
-    @classmethod
-    def from_json(cls, jsonnotice):
-        """return an User object from a json object that contains the same
-        fields
-        """
-        uid = jsonnotice.get('uid', None)
-        title = jsonnotice['title']
-        body = jsonnotice['body']
-        author = jsonnotice['author']
-        destination = jsonnotice.get('destination', None)
-        creation = jsonnotice.get('creation', None)
-
-        return cls(uid, title, body, author, destination, creation)
-
-    def to_json(self):
-        """return a dict representation of the notice
-        """
-        return vars(self)
 
 def parse_notices(data):
     """extract notices from an atom feed
@@ -201,14 +173,12 @@ def show_stream_atom(request, username):
 
     return tubes.Response('nothing to see here, please move along', 404)
 
-@handler.post('^/user/?$', accepts=tubes.JSON)
-def create_user_json(request, data):
-    user = User.from_json(data)
+@handler.post('^/user/?$', accepts=tubes.JSON, transform_body=User.from_json)
+def create_user_json(request, user):
     users[user.user] = user
 
-@handler.post('^/notice/?$', accepts=tubes.JSON)
-def create_notice_json(request, data):
-    notice = Notice.from_json(data)
+@handler.post('^/notice/?$', accepts=tubes.JSON, transform_body=Notice.from_json)
+def create_notice_json(request, notice):
     notice.uid = str(uuid.uuid4())
     notice.creation = time.time()
     notices[notice.uid] = notice

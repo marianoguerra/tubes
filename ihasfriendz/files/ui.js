@@ -30,7 +30,7 @@ ui.onSendClick = function () {
 
     notice = model.Notice(null, title, message, user);
 
-    requests.create_notice_json(notice, ui.onSendOK, ui.onSendError);
+    requests.createNoticeJson(notice, ui.onSendOK, ui.onSendError);
 };
 
 ui.onSendOK = function (notice) {
