@@ -97,12 +97,17 @@ class Handler(object):
                     # add the body of the request as first parameter
                     args.insert(0, data)
 
-                result = route.handler(request, *args)
+                try:
+                    result = route.handler(request, *args)
+                except Reponse, response:
+                    return response
 
                 if isinstance(result, Response):
                     return result(environ, start_response)
 
-                if route.produces in self.marshallers:
+                if route.produces == JSON and is_json_class(result):
+                    result = result.to_json_str()
+                elif route.produces in self.marshallers:
                     result = self.marshallers[route.produces](result)
 
                 return Response(result, content_type=route.produces)(environ,
@@ -184,7 +189,7 @@ class JsonClass(object):
          * cls.to_json()
          * cls.to_json_str()
         '''
-        if hasattr(cls,  'TUBES_JSON_SERIALIZABLE'):
+        if hasattr(cls, 'TUBES_JSON_SERIALIZABLE'):
             return cls
 
         setattr(cls, 'from_json', classmethod(from_json))
@@ -198,6 +203,11 @@ class JsonClass(object):
         setattr(cls, 'TUBES_FROM_TRANSFORM', self.from_transform)
 
         return cls
+
+def is_json_class(cls):
+    '''return True if cls is a json class
+    '''
+    return hasattr(cls, 'TUBES_JSON_SERIALIZABLE'):
 
 def from_json(cls, obj):
     '''return a class instance taking the values from the json obj and
@@ -242,6 +252,16 @@ def to_json_str(self):
     '''return a json string representation of the object
     '''
     return json.dumps(self.to_json())
+
+def to_json_list(cls, objs):
+    '''return a list of json objects of this class
+    '''
+    return [obj.to_json() for obj in objs]
+
+def to_json_list_str(cls, objs):
+    '''return a string representing a list of json objects of this class
+    '''
+    return json.dumps(cls.to_json_list(objs))
 
 def _replace_underscore_to_camelcase(match):
     '''function used in underscores_to_camelcase to replace the match
