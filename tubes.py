@@ -207,7 +207,7 @@ class JsonClass(object):
 def is_json_class(cls):
     '''return True if cls is a json class
     '''
-    return hasattr(cls, 'TUBES_JSON_SERIALIZABLE'):
+    return hasattr(cls, 'TUBES_JSON_SERIALIZABLE')
 
 def from_json(cls, obj):
     '''return a class instance taking the values from the json obj and
