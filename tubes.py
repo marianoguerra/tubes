@@ -99,7 +99,7 @@ class Handler(object):
 
                 try:
                     result = route.handler(request, *args)
-                except Reponse, response:
+                except Response, response:
                     return response
 
                 if isinstance(result, Response):

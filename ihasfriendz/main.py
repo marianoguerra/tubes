@@ -74,7 +74,7 @@ def parse_notices(data):
         body = entry.find(atomns + 'summary').text
         updated = entry.find(atomns + 'updated').text
         # TODO: parse TZ data
-        creation = time.strptime(updated.split('--')[0], "%Y-%m-%dT%H:%M:%S")
+        creation = time.strptime(updated[:19], "%Y-%m-%dT%H:%M:%S")
 
         notice = Notice(uid, title, body, author, None, creation)
 
@@ -211,7 +211,7 @@ def test(request):
 @handler.get('^/?$', produces=tubes.HTML)
 def index(request):
     '''return the index'''
-    return tubes.Response('/files/index.html', code=302)
+    return tubes.Response('/files/index.html', 302)
 
 @handler.post('^/callback(.*?)$', produces=tubes.HTML)
 def receive_notification(request, info):
@@ -222,7 +222,10 @@ def receive_notification(request, info):
 
 @handler.get('^/callback(.*?)$', produces=tubes.TEXT)
 def confirm_subscription(request, info):
-    return request.args['hub.challenge']
+    if 'hub.challenge' in request.args:
+        return request.args['hub.challenge']
+
+    print 'hub.challenge not present in request.args'
 
 @handler.get('^/new-notices/?$', produces=tubes.HTML)
 def get_new_notices(request):
