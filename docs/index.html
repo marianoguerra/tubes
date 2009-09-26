@@ -1,0 +1,162 @@
+<html>
+<head>
+ <meta http-equiv="content-type" content="text/html; charset=utf-8"0>
+
+ <title>tubes web library</title>
+ <link rel="stylesheet" href="css/code.css" type="text/css" media="screen" charset="utf-8"/>
+ <link rel="stylesheet" href="css/master.css" type="text/css" media="screen" charset="utf-8"/>
+ <script type="text/javascript" src="js/jquery-1.3.2.js" charset="utf-8"></script>
+</head>
+<body>
+ <div id="outer">
+  <div id="header">
+   <h1 id="heading">tubes!</h1>
+   <p>a series of tubes...</p>
+  </div>
+  <div id="main">
+
+   <div class="question">
+    <h2>what is it?</h2>
+    <p>
+     it&apos;s a small library on top of 
+     <a href="http://werkzeug.pocoo.org/">werkzeug</a> 
+     to create 
+     <a href="http://en.wikipedia.org/wiki/REST">REST</a>
+     APIs (and websites) using 
+     <a href="http://en.wikipedia.org/wiki/JSON">JSON</a>
+     </p>
+   </div>
+
+   <div class="question">
+    <h2>why?</h2>
+    <p>because I make websites and I don't like big frameworks, and I don't like the webpy way of doing things</p>
+   </div>
+
+   <div class="question">
+    <h2>no, really, why??</h2>
+    <p>because I&apos;m tired of coding the same stuff all over again, so I decided to put them togheter for great justice</p>
+   </div>
+
+   <div class="question">
+    <h2>features?</h2>
+    <p>
+     in no particular order
+     <ul>
+      <li><em>simple sintax</em> using decorators to map an url to a method</li>
+      <li>match urls with regular expression</li>
+      <li>automatic marshalling and unmarshalling of objects</li>
+      <li>based on <a href="http://werkzeug.pocoo.org/">werkzeug</a> (which is <em>awesome</em>)</li>
+      <li>dispatch based on content type</li>
+      <li>based on <a href="http://wsgi.org/wsgi/What_is_WSGI">wsgi</a></li>
+      <li>google appengine ready</li>
+      <li><em>choose</em> your template engine and ORM</li>
+      <li>automatic generation of code for requests, classes and API tests</li>
+     </ul>
+    </p>
+   </div>
+
+   <div class="question">
+    <h2>examples?</h2>
+    <h3>hello world</h3>
+<div class="highlight"><pre><span class="k">import</span> <span class="nn">tubes</span>
+
+<span class="n">handler</span> <span class="o">=</span> <span class="n">tubes</span><span class="o">.</span><span class="n">Handler</span><span class="p">()</span>
+
+<span class="nd">@handler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;^.*$&quot;</span><span class="p">,</span> <span class="n">produces</span><span class="o">=</span><span class="n">tubes</span><span class="o">.</span><span class="n">HTML</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">hello_world</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&quot;hello world!&quot;</span>
+
+<span class="n">tubes</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+</pre></div>
+
+    <h4>run it</h4>
+    <pre>
+$ python hello_world.py
+* Running on http://0.0.0.0:8000/
+    </pre>
+    <h4>test it</h4>
+    <p>point your browser to that address, you can add anything after the url, that handler will match any url</p>
+   </div>
+
+   <a href="#" onclick="$(this).fadeOut();$('#moreexamples').fadeIn();return false;">more!</a>
+
+   <div class="more" id="moreexamples">
+    <div class="question">
+     <h3>hello name</h3>
+     
+ <div class="highlight"><pre><span class="k">import</span> <span class="nn">tubes</span>
+
+ <span class="n">handler</span> <span class="o">=</span> <span class="n">tubes</span><span class="o">.</span><span class="n">Handler</span><span class="p">()</span>
+
+
+ <span class="nd">@handler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;^/?$&quot;</span><span class="p">,</span> <span class="n">produces</span><span class="o">=</span><span class="n">tubes</span><span class="o">.</span><span class="n">HTML</span><span class="p">)</span>
+ <span class="k">def</span> <span class="nf">hello_world</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+     <span class="k">return</span> <span class="s">&quot;hello world!&quot;</span>
+
+ <span class="c"># match one or more characters of any type, optionally an ending slash</span>
+ <span class="nd">@handler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;^/(.+?)/?$&quot;</span><span class="p">,</span> <span class="n">produces</span><span class="o">=</span><span class="n">tubes</span><span class="o">.</span><span class="n">HTML</span><span class="p">)</span>
+ <span class="k">def</span> <span class="nf">hello_name</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+     <span class="k">return</span> <span class="s">&quot;hello &quot;</span> <span class="o">+</span> <span class="n">name</span>
+
+ <span class="n">tubes</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+ </pre></div>
+
+     <h4>run it</h4>
+     <pre>
+ # same as before, just change the file name in the following examples
+ $ python hello_name.py
+ * Running on http://0.0.0.0:8000/
+     </pre>
+     <h4>test it</h4>
+     <p>
+      point your browser to that address, you will se a hello world, now go to
+      <a href="http://0.0.0.0:8000/yourname">http://0.0.0.0:8000/yourname</a> you
+      should see "hello yourname". you can change <em>yourname</em> for any
+      string or path
+     </p>
+    </div>
+
+     <h3>responses</h3>
+
+ <div class="highlight"><pre><span class="k">import</span> <span class="nn">tubes</span>
+
+ <span class="n">handler</span> <span class="o">=</span> <span class="n">tubes</span><span class="o">.</span><span class="n">Handler</span><span class="p">()</span>
+
+ <span class="nd">@handler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;^/?$&quot;</span><span class="p">,</span> <span class="n">produces</span><span class="o">=</span><span class="n">tubes</span><span class="o">.</span><span class="n">HTML</span><span class="p">)</span>
+ <span class="k">def</span> <span class="nf">hello_world</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+     <span class="k">return</span> <span class="s">&quot;hello world!&quot;</span>
+
+ <span class="nd">@handler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;^/fail/?$&quot;</span><span class="p">,</span> <span class="n">produces</span><span class="o">=</span><span class="n">tubes</span><span class="o">.</span><span class="n">HTML</span><span class="p">)</span>
+ <span class="k">def</span> <span class="nf">fail</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+     <span class="k">return</span> <span class="n">tubes</span><span class="o">.</span><span class="n">Response</span><span class="p">(</span><span class="s">&quot;introductory example fail&quot;</span><span class="p">,</span> <span class="mf">500</span><span class="p">)</span>
+
+ <span class="nd">@handler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;^/not-here/?$&quot;</span><span class="p">,</span> <span class="n">produces</span><span class="o">=</span><span class="n">tubes</span><span class="o">.</span><span class="n">HTML</span><span class="p">)</span>
+ <span class="k">def</span> <span class="nf">not_here</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+     <span class="k">return</span> <span class="n">tubes</span><span class="o">.</span><span class="n">Response</span><span class="p">(</span><span class="s">&quot;nothing to see here, please move along&quot;</span><span class="p">,</span> <span class="mf">404</span><span class="p">)</span>
+
+ <span class="nd">@handler</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;^/redirect/?$&quot;</span><span class="p">,</span> <span class="n">produces</span><span class="o">=</span><span class="n">tubes</span><span class="o">.</span><span class="n">HTML</span><span class="p">)</span>
+ <span class="k">def</span> <span class="nf">redirect</span><span class="p">(</span><span class="n">handler</span><span class="p">):</span>
+     <span class="k">return</span> <span class="n">tubes</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="mf">301</span><span class="p">)</span>
+
+ <span class="c"># you can make werkzeug reload the server everytime a change is made</span>
+ <span class="c"># also you can enable a debugger useful when developing to inspect exceptions</span>
+ <span class="c"># on the browser</span>
+ <span class="n">tubes</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span> <span class="n">use_reloader</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">use_debugger</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+ </pre></div>
+     
+     <h4>test it</h4>
+     <p>
+     point your browser to that the following addresses
+     <a href="http://0.0.0.0:8000/">hello world</a>,
+     <a href="http://0.0.0.0:8000/fail">fail (500 error)</a>,
+     <a href="http://0.0.0.0:8000/not-here">not found (404 error)</a>,
+     <a href="http://0.0.0.0:8000/redirect">redirect (to hello world)</a>
+     </p>
+    </div>
+
+   </div>
+  </div>
+
+ </div>
+</body>
+</html>

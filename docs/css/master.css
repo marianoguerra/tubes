@@ -1,0 +1,52 @@
+html, body, div, span{
+ border: 0;
+ padding: 0;
+}
+
+html, body{
+ width: 100%;
+ height: 100%;
+}
+
+#header h1{
+ font-size: 5em;
+ color: #369;
+}
+
+#header h1, #header p{
+ text-align: right;
+}
+
+body{
+ color: #ccc;
+ font-family: arial;
+ background-color: #111;
+}
+
+a, a:visited{
+ color: #369;
+ text-decoration: none;
+}
+
+a:hover{
+ color: #47a;
+}
+
+em{
+ color: #963;
+}
+
+.question{
+ margin-bottom: 2em;
+}
+
+#outer{
+ margin-left: 15%;
+ margin-bottom: 5em;
+ width: 60%
+
+}
+
+.more{
+ display: none;
+}

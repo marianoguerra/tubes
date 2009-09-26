@@ -5,6 +5,7 @@ import json
 import werkzeug
 from werkzeug import Request
 from werkzeug import Response
+from werkzeug import redirect
 
 # http://www.sfsu.edu/training/mimetype.htm
 BIN = 'application/octet-stream'
@@ -102,7 +103,7 @@ class Handler(object):
                 except Response, response:
                     return response
 
-                if isinstance(result, Response):
+                if isinstance(result, werkzeug.BaseResponse):
                     return result(environ, start_response)
 
                 if route.produces == JSON and is_json_class(result):
