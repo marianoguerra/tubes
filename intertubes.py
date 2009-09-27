@@ -138,16 +138,20 @@ def generate_api_test(routes):
     wrapper = div(class_='wrapper')
     for method in routes:
         for route in routes[method]:
-            name = route.handler.__name__
+            name = tubes.underscores_to_camelcase(route.handler.__name__)
             output_id = name + '-output'
             args = []
+            start_arg = 1
+
+            if route.accepts == tubes.JSON:
+                start_arg = 2
 
             tbl = table(class_='api-form', id=name)
             output = div(class_='output', id=output_id,
                     onclick="$(this).html('');")
             wrapper.add(div(h2(name), tbl, output, class_='api'))
 
-            for arg in inspect.getargspec(route.handler).args[1:]:
+            for arg in inspect.getargspec(route.handler).args[start_arg:]:
                 argname = name + '-' + arg
                 args.append(argname)
                 tbl.add(tr(
@@ -155,7 +159,7 @@ def generate_api_test(routes):
                     td(input(type='text', id=argname, class_='value'),
                         class_='right')))
 
-            if route.has_payload:
+            if route.has_payload or route.accepts == tubes.JSON:
                 tbl.add(tr(
                     td("payload (eval)", class_='left'),
                     td(input(type='text', id=name + '--payload', class_='value'),
@@ -214,7 +218,7 @@ def generate_requests(handler, namespace='requests'):
 
         if route.accepts == tubes.JSON:
             code += "        'data': JSON.stringify(data),\n"
-        else:
+        elif route.accepts is not None:
             code += "        'data': data,\n"
 
         code += "        'dataType': '%s',\n" % \
@@ -252,9 +256,20 @@ def generate_requests(handler, namespace='requests'):
     return code
 
 EXAMPLE_CSS = """
-html, body, span, div, h1, h2, h3, h4, h5, h6, table, td, tr{
- margin: 0;
+html, body, div, span{
+ border: 0;
  padding: 0;
+}
+
+html, body{
+ width: 100%;
+ height: 100%;
+}
+
+body{
+ color: #ccc;
+ font-family: arial;
+ background-color: #111;
 }
 
 table, tr, td {
@@ -262,29 +277,29 @@ table, tr, td {
  padding: 2px;
 }
 
-h1 {
- text-align: center;
-}
-
-body{
- color: #333;
- font-family: Helvetica,Arial,Sans-serif;
- width: 100%;
- height: 100%;
+h1{
+ font-size: 5em;
+ color: #369;
+ text-align: right;
+ margin-right: 15%;
 }
 
 .api{
  margin: 1%;
  padding: 1%;
  display: table;
- border: 1px solid #555;
+ width: 70%;
+ margin-left: 15%;
+ border-bottom: 1px solid #555;
 }
 
 .api-form{
+ width: 100%;
 }
 
 .api-form input{
- width: 100%;
+ width: 80%;
+ float: right;
 }
 
 .output{

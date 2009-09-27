@@ -1,3 +1,4 @@
+import re
 import tubes
 # this module generates code for us (you can ignore it if you want)
 import intertubes
@@ -6,6 +7,8 @@ import intertubes
 @tubes.JsonClass()
 class User(object):
     """a class that represents an user"""
+    USER_FORMAT = '[a-z][a-zA-Z0-9]*'
+    ALL_USER_FORMAT = '^' + USER_FORMAT + '$'
 
     def __init__(self, user=None, mail=None, firstname=None,
             lastname=None, website=None):
@@ -15,6 +18,12 @@ class User(object):
         self.firstname = firstname
         self.lastname = lastname
         self.website = website
+
+    @classmethod
+    def is_valid_username(cls, username):
+        '''return True if username matches User.USER_FORMAT
+        '''
+        return re.match(User.ALL_USER_FORMAT, username) is not None
 
 handler = tubes.Handler()
 # if the path starts with /files serve
@@ -29,6 +38,9 @@ USERS = {}
 @handler.post('^/user/?$', accepts=tubes.JSON, transform_body=User.from_json)
 def new_user(handler, user):
     # add the new user
+    if not User.is_valid_username(user.user):
+        return tubes.Response('Invalid username', 500)
+
     USERS[user.user] = user
 
 # update user
@@ -36,13 +48,12 @@ def new_user(handler, user):
 def update_user(handler, user):
     if user.user in USERS:
         USERS[user.user] = user
-        return tubes.Response("ok", 200)
-
-    return tubes.Response("user not found", 404)
+    else:
+        return tubes.Response("user not found", 404)
 
 # match a valid username identifier
 # if no produces keyword is given assume JSON
-@handler.get('^/user/([a-z][a-zA-Z0-9\.]*)/?')
+@handler.get('^/user/(' + User.USER_FORMAT + ')/?')
 def get_user(handler, username):
     if username in USERS:
         return USERS[username]
@@ -53,17 +64,14 @@ def get_user(handler, username):
 @handler.get('^/users/?')
 def get_users(handler):
     # isn't this easy?
-    return User.from_json_list(USERS.items())
+    return User.to_json_list(USERS.values())
 
-# match a valid username identifier
-# if accepts json, then the argument after response is the body
-@handler.delete('^/user/([a-z][a-zA-Z0-9\.]*)/?', accepts=tubes.JSON, transform_body=User.from_json)
-def remove_user(handler, user, username):
+@handler.delete('^/user/(' + User.USER_FORMAT + ')/?', transform_body=User.from_json)
+def remove_user(handler, username):
     if username in USERS:
         del USERS[username]
-        return tubes.Response("ok", 200)
-
-    return tubes.Response("user not found", 404)
+    else:
+        return tubes.Response("user not found", 404)
 
 # return the generated requests javascript code on that url
 # (on production you should save it to a file)
@@ -90,4 +98,5 @@ MODEL = intertubes.generate_model([User])
 TEST_PAGE = intertubes.generate_html_example(handler,
         ('/files/json2.js', '/model.js'))
 
-tubes.run(handler, use_reloader=True)
+if __name__ == '__main__':
+    tubes.run(handler, use_reloader=True)

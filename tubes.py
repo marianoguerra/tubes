@@ -1,7 +1,12 @@
 '''module to create REST APIS'''
 import os
 import re
-import json
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
 import werkzeug
 from werkzeug import Request
 from werkzeug import Response
@@ -197,6 +202,8 @@ class JsonClass(object):
         setattr(cls, 'from_json_str', classmethod(from_json_str))
         setattr(cls, 'to_json', to_json)
         setattr(cls, 'to_json_str', to_json_str)
+        setattr(cls, 'to_json_list', classmethod(to_json_list))
+        setattr(cls, 'to_json_list_str', classmethod(to_json_list_str))
         setattr(cls, 'TUBES_JSON_SERIALIZABLE', True)
         setattr(cls, 'TUBES_TO_IGNORE', self.to_ignore)
         setattr(cls, 'TUBES_FROM_IGNORE', self.from_ignore)
