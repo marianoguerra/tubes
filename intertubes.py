@@ -201,9 +201,14 @@ def generate_requests(handler, namespace='requests'):
         if pattern.endswith('?'):
             pattern = pattern[:-1]
 
+        start_arg = 1
+
+        if route.accepts == tubes.JSON:
+            start_arg = 2
+
         parts = re.split('(\(.*?\))', pattern)
         result = ['"']
-        args = inspect.getargspec(route.handler).args[1:]
+        args = inspect.getargspec(route.handler).args[start_arg:]
 
         for part in parts:
             if part.startswith('('):
