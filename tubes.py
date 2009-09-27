@@ -20,6 +20,7 @@ HTML = 'text/html'
 XML = 'text/xml'
 JS = 'application/javascript'
 ATOM = 'application/atom+xml'
+ICON = 'image/vnd.microsoft.icon'
 
 JQUERY_TYPES = {}
 JQUERY_TYPES[JSON] = 'json'
