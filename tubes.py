@@ -154,7 +154,7 @@ class JsonClass(object):
     '''
 
     def __init__(self, to_ignore=None, from_ignore=None,
-            to_transform=None, from_transform=None):
+            to_transform=None, from_transform=None, exclude_private_fields=True):
         '''constructor
 
         to_ignore -- a list of attributes to ignore when transforming to json
@@ -186,6 +186,8 @@ class JsonClass(object):
         if self.from_transform is None:
             self.from_transform = {}
 
+        self.exclude_private_fields = exclude_private_fields
+
     def __call__(self, cls):
         '''the decorator, add constants to the class:
             * cls.TUBES_JSON_SERIALIZABLE = True
@@ -210,6 +212,8 @@ class JsonClass(object):
         setattr(cls, 'TUBES_FROM_IGNORE', self.from_ignore)
         setattr(cls, 'TUBES_TO_TRANSFORM', self.to_transform)
         setattr(cls, 'TUBES_FROM_TRANSFORM', self.from_transform)
+        setattr(cls, 'TUBES_EXCLUDE_PRIVATE_FIELDS',
+                self.exclude_private_fields)
 
         return cls
 
@@ -248,6 +252,9 @@ def to_json(self):
     fields = []
     for name, value in vars(self).iteritems():
         if name in self.TUBES_TO_IGNORE:
+            continue
+
+        if self.TUBES_EXCLUDE_PRIVATE_FIELDS and name.startswith('_'):
             continue
 
         if name in self.TUBES_TO_TRANSFORM:
