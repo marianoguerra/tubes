@@ -211,7 +211,7 @@ def test(request):
 @handler.get('^/?$', produces=tubes.HTML)
 def index(request):
     '''return the index'''
-    return tubes.Response('/files/index.html', 302)
+    return tubes.redirect('/files/index.html', code=302)
 
 @handler.post('^/callback(.*?)$', produces=tubes.HTML)
 def receive_notification(request, info):
