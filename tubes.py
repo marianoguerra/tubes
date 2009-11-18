@@ -21,6 +21,9 @@ XML = 'text/xml'
 JS = 'application/javascript'
 ATOM = 'application/atom+xml'
 ICON = 'image/vnd.microsoft.icon'
+PDF = 'application/pdf'
+RTF = 'application/rtf'
+PNG = 'image/png'
 
 JQUERY_TYPES = {}
 JQUERY_TYPES[JSON] = 'json'
@@ -70,7 +73,7 @@ class Handler(object):
 
     def __init__(self):
         self.routes = {}
-        self.marshallers = {JSON: json.dumps, TEXT: str}
+        self.marshallers = {JSON: json.dumps}
         self.static_paths = {}
 
     def __call__(self, environ, start_response):
