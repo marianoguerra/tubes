@@ -98,13 +98,13 @@ def generate_model(classes, namespace='model', initialize_namespace=True):
 def class_constructor(class_, namespace='model'):
     '''return the constructor of a class in js'''
     args = inspect.getargspec(class_.__init__)
-    def_offset = len(args.defaults)
-    common = args.args[1: -def_offset]
-    defaults = args.args[-def_offset:]
+    def_offset = len(args[3])
+    common = args[0][1: -def_offset]
+    defaults = args[0][-def_offset:]
     first = True
 
     code = '%s.%s = function (%s) {\n    return {' % (namespace,
-            class_.__name__, ', '.join(args.args[1:]))
+            class_.__name__, ', '.join(args[0][1:]))
 
     for arg in common:
         if first:
@@ -114,7 +114,7 @@ def class_constructor(class_, namespace='model'):
 
         code += '"%s": %s,\n' % (arg, arg)
 
-    for arg, value in zip(defaults, args.defaults):
+    for arg, value in zip(defaults, args[3]):
         if value is None:
             rep = 'null'
         else:
@@ -151,7 +151,7 @@ def generate_api_test(routes):
                     onclick="$(this).html('');")
             wrapper.add(div(h2(name), tbl, output, class_='api'))
 
-            for arg in inspect.getargspec(route.handler).args[start_arg:]:
+            for arg in inspect.getargspec(route.handler)[0][start_arg:]:
                 argname = name + '-' + arg
                 args.append(argname)
                 tbl.add(tr(
@@ -208,7 +208,7 @@ def generate_requests(handler, namespace='requests'):
 
         parts = re.split('(\(.*?\))', pattern)
         result = ['"']
-        args = inspect.getargspec(route.handler).args[start_arg:]
+        args = inspect.getargspec(route.handler)[0][start_arg:]
 
         for part in parts:
             if part.startswith('('):
@@ -246,7 +246,7 @@ def generate_requests(handler, namespace='requests'):
             if route.accepts == tubes.JSON:
                 start_arg = 2
 
-            args = inspect.getargspec(route.handler).args[start_arg:]
+            args = inspect.getargspec(route.handler)[0][start_arg:]
 
             if route.has_payload or route.accepts == tubes.JSON:
                 args += ['data']

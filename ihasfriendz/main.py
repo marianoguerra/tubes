@@ -1,7 +1,12 @@
 import os
 import sys
 import time
-import json
+
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
 import uuid
 import Queue
 from xml.etree import ElementTree
@@ -28,7 +33,8 @@ user_notices = {}
 stream = []
 new_notices = Queue.Queue()
 
-@tubes.JsonClass()
+# remove the comment below if you have python 2.6 or above
+#@tubes.JsonClass()
 class User(object):
     """a class that represents an user"""
 
@@ -41,7 +47,11 @@ class User(object):
         self.lastname = lastname
         self.website = website
 
-@tubes.JsonClass()
+# for python 2.5 compatibility
+User = tubes.JsonClass()(User)
+
+# remove the comment below if you have python 2.6 or above
+#@tubes.JsonClass()
 class Notice(object):
     """a class that represents a notice"""
 
@@ -58,6 +68,9 @@ class Notice(object):
         self.creation = creation
         if self.creation is None:
             self.creation = time.time()
+
+# for python 2.5 compatibility
+Notice = tubes.JsonClass()(Notice)
 
 def parse_notices(data):
     """extract notices from an atom feed
