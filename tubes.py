@@ -2,6 +2,8 @@
 import os
 import re
 
+import functools
+
 try:
     import json
 except ImportError:
@@ -13,23 +15,23 @@ from werkzeug import Response
 from werkzeug import redirect
 
 # http://www.sfsu.edu/training/mimetype.htm
-BIN = 'application/octet-stream'
+BIN  = 'application/octet-stream'
 JSON = 'application/json'
 TEXT = 'text/plain'
 HTML = 'text/html'
-XML = 'text/xml'
-JS = 'application/javascript'
+XML  = 'text/xml'
+JS   = 'application/javascript'
 ATOM = 'application/atom+xml'
 ICON = 'image/vnd.microsoft.icon'
-PDF = 'application/pdf'
-RTF = 'application/rtf'
-PNG = 'image/png'
+PDF  = 'application/pdf'
+RTF  = 'application/rtf'
+PNG  = 'image/png'
 
 JQUERY_TYPES = {}
 JQUERY_TYPES[JSON] = 'json'
 JQUERY_TYPES[TEXT] = 'text'
 JQUERY_TYPES[HTML] = 'html'
-JQUERY_TYPES[XML] = 'xml'
+JQUERY_TYPES[XML]  = 'xml'
 
 class Route(object):
     '''a class that represents a registered route'''
@@ -122,6 +124,7 @@ class Handler(object):
 
                 return Response(result, content_type=route.produces)(environ,
                         start_response)
+
         return Response(status=404)(environ, start_response)
 
     def register_route(self, method, pattern, handler, accepts, produces,
@@ -141,6 +144,22 @@ class Handler(object):
     def register_static_path(self, match_path, *dest_path):
         '''register a path that will be served as static content'''
         self.static_paths[match_path] = os.path.join(*dest_path)
+
+    def authorize(self, authorize_func):
+        '''decorator to validate a request prior to calling the handler
+        if the authorize_func returns True, them the function is called
+        otherwise 401 is returned
+        '''
+        def wrapper(func):
+            @functools.wraps(func)
+            def inner(*args, **kwargs):
+                if authorize_func(args[0]):
+                    return func(*args, **kwargs)
+                else:
+                    return Response("unauthorized", 401)
+
+            return inner
+        return wrapper
 
     # http://tools.ietf.org/html/rfc2616#page-51
     get = generate_route_decorator('GET')

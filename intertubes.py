@@ -117,6 +117,8 @@ def class_constructor(class_, namespace='model'):
     for arg, value in zip(defaults, args[3]):
         if value is None:
             rep = 'null'
+        elif value == True or value == False:
+            rep = repr(value).lower()
         else:
             rep = repr(value)
 
