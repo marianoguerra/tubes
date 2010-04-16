@@ -91,7 +91,7 @@ def generate_model(classes, namespace='model', initialize_namespace=True):
         code += 'var %s = {}\n\n' % (namespace, )
 
     for class_ in classes:
-        code += class_constructor(class_)
+        code += class_constructor(class_, namespace)
 
     return code
 
